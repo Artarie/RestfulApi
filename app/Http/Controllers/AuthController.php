@@ -14,16 +14,15 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6',
-        ]);
 
+
+        $name = $request->input('name');
+        $email = $request->input('email');
+        $password = $request->input('password');
         $user = new User([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $name,
+            'email' => $email,
+            'password' => Hash::make($password),
         ]);
 
         $user->save();
@@ -33,38 +32,35 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
-        ]);
+
+
 
         $credentials = $request->only('email', 'password');
 
-        // Generate the JWT token
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $payload = [
+                'sub' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'iat' => time(),
+                'exp' => time() + (60 * 120) // Token expires in 2 hours
+            ];
 
-        $payload = [
-            'sub' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'iat' => time(),
-            'exp' => time() + (60 * 120) // Token expires in 2 hours
-        ];
-        
-        $token = JWT::encode($payload, config('jwt.secret'), 'HS256');
-        
-        // Return the token in the response headers
-        return response()
-            ->json(['message' => 'Login successful with token: ' . $token]);
+            $token = JWT::encode($payload, config('jwt.secret'), 'HS256');
 
-        throw ValidationException::withMessages([
-            'email' => 'Invalid credentials',
-        ]);
+            // Return the token in the response headers
+            return response()
+                ->json(['message' => 'Login successful with token: ' . $token]);
+        } else {
+
+            return response()
+                ->json(['message' => 'No user found, please check your email and password.']);
+        }
     }
 
-    public function delete(Request $request)
+    public function logout(Request $request)
     {
-        $request->user()->tokens()->delete();
-
         $token = $request->bearerToken();
         // Decodificar token JWT y validar firma
         try {
@@ -74,17 +70,8 @@ class AuthController extends Controller
         }
         // Verificar que el usuario del token es el mismo que el usuario que se va a borrar
         $userId = $payload->sub;
-        if ($userId != Auth::user()->id) {
+        if ($userId != $id) {
             return response()->json(['error' => 'No tiene permisos para realizar esta acción'], 403);
         }
-        // Borrar usuario
-        $user = User::find(Auth::user()->id);
-        if ($user) {
-            $user->delete();
-            return response()->json(['message' => 'Usuario eliminado correctamente'], 200);
-        } else {
-            return response()->json(['error' => 'El usuario no existe'], 404);
-        }
-
     }
 }

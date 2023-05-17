@@ -13,6 +13,11 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/register', [App\Http\Controllers\AuthController::class, 'register'])->name('register');
+Route::get('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('login');
+Route::get('/logout', [App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+
+
 Route::prefix('game')->group(function() {
     Route::get('/get', [App\Http\Controllers\GamesController::class, 'getGame'])->name('games');
     Route::get('/screenshot/{game}', [App\Http\Controllers\GamesController::class, 'getScreenshot'])->name('screenshot');
@@ -27,8 +32,4 @@ Route::prefix('score')->group(function() {
 
 });
 
-
-Route::get('/register', [App\Http\Controllers\AuthController::class, 'register'])->name('register');
-Route::get('/login', [App\Http\Controllers\AuthController::class, 'login'])->name('login');
-Route::get('/logout', [App\Http\Controllers\AuthController::class, 'delete'])->name('delete');
 
