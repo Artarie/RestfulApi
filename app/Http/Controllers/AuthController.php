@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Carbon\Carbon;
 use Exception;
 use Firebase\JWT\JWT;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -47,8 +49,8 @@ class AuthController extends Controller
                 'exp' => time() + (60 * 120) // Token expires in 2 hours
             ];
 
-            $token = JWT::encode($payload, config('jwt.secret'), 'HS256');
-
+            $token = JWT::encode($payload, env('JWT_SECRET'), 'HS256');
+            
             // Return the token in the response headers
             return response()
                 ->json(['message' => 'Login successful with token: ' . $token]);
@@ -62,16 +64,11 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $token = $request->bearerToken();
-        // Decodificar token JWT y validar firma
-        try {
-            $payload = JWT::decode($token, config('jwt.secret'), ['HS256']);
-        } catch (Exception $e) {
-            return response()->json(['error' => 'Token inválido'], 401);
-        }
-        // Verificar que el usuario del token es el mismo que el usuario que se va a borrar
-        $userId = $payload->sub;
-        if ($userId != $id) {
-            return response()->json(['error' => 'No tiene permisos para realizar esta acción'], 403);
-        }
+        $user = Auth::user();
+        $payload = JWT::decode($token, env('JWT_SECRET'), 'HS256');
+    
+       auth()->logout();
+        return response()
+        ->json(['message' => 'Succesful logout, removing token']);
     }
 }

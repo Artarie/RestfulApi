@@ -15,8 +15,7 @@ return [
     |
     */
 
-    'secret' => 'secretkey',
-
+    'secret' => env('JWT_SECRET', 'secretkey')
 
 
 ];
