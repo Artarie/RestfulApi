@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 
 class PandaScoreController extends Controller
 {
-    
+  //API KEY KSD9cjzfdPnlbjR7v0SNnYyAYjZQCqepZGfkKcxXLhQZP0kE8hM
   public function getPlayer(Request $request, $player)
   {
     $token = $request->bearerToken();
